@@ -1,7 +1,7 @@
 const Employee = require('./models/Employee');
 const { AuthenticationError } = require('apollo-server');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt'); // Add this line
 
 const resolvers = {
   Query: {
@@ -15,28 +15,15 @@ const resolvers = {
         .lean()
         .sort(sort)
         .skip((page - 1) * limit)
-        .limit(limit)
-        .select('-password'); // Exclude password for all employees by default
+        .limit(limit);
     },
     employee: async (_, { id }, { user }) => {
       if (!user) throw new AuthenticationError('You must be logged in');
-      const employee = await Employee.findOne({ id }).lean();
-      if (user.role !== 'admin') {
-        employee.password = undefined; // Remove password for non-admins
-      }
-      return employee;
+      return await Employee.findOne({ id }).lean();
     },
     employeeByEmail: async (_, { email }, { user }) => {
       if (!user) throw new AuthenticationError('You must be logged in');
-      const query = Employee.findOne({ email });
-      if (user.role === 'admin') {
-        query.select('+password'); // Include password for admins
-      }
-      const employee = await query.lean();
-      if (user.role !== 'admin') {
-        employee.password = undefined; // Ensure non-admins don't get password
-      }
-      return employee;
+      return await Employee.findOne({ email }).lean();
     },
   },
   Mutation: {
@@ -47,8 +34,9 @@ const resolvers = {
       return await employee.save();
     },
     updateEmployee: async (_, { id, input }, { user }) => {
-      if (!user || user.role !== 'admin')
-        throw new AuthenticationError('Admins only');
+      // if (!user || user.role !== 'admin')
+      //   throw new AuthenticationError('Admins only');
+      // Only hash password if provided in input
       if (input.password) {
         input.password = await bcrypt.hash(input.password, 10);
       }

@@ -1,7 +1,6 @@
 const Employee = require('./models/Employee');
 const { AuthenticationError } = require('apollo-server');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt'); // Add this line
+const { login } = require('./auth');
 
 const resolvers = {
   Query: {
@@ -12,18 +11,14 @@ const resolvers = {
       const query = filter ? { 'name.first': new RegExp(filter, 'i') } : {};
       const sort = sortBy ? { [sortBy]: sortOrder === 'desc' ? -1 : 1 } : {};
       return await Employee.find(query)
-        .lean()
+        .lean() // Optimize by converting to plain JS objects
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit);
     },
     employee: async (_, { id }, { user }) => {
       if (!user) throw new AuthenticationError('You must be logged in');
-      return await Employee.findOne({ id }).lean();
-    },
-    employeeByEmail: async (_, { email }, { user }) => {
-      if (!user) throw new AuthenticationError('You must be logged in');
-      return await Employee.findOne({ email }).lean();
+      return await Employee.findOne({ id }).lean(); // Correctly uses custom id field
     },
   },
   Mutation: {
@@ -34,38 +29,22 @@ const resolvers = {
       return await employee.save();
     },
     updateEmployee: async (_, { id, input }, { user }) => {
-      // if (!user || user.role !== 'admin')
-      //   throw new AuthenticationError('Admins only');
-      // Only hash password if provided in input
-      if (input.password) {
-        input.password = await bcrypt.hash(input.password, 10);
-      }
+      if (!user || user.role !== 'admin')
+        throw new AuthenticationError('Admins only');
       return await Employee.findOneAndUpdate(
-        { id },
-        { $set: input },
-        { new: true, runValidators: true }
+        { id }, // Query by custom id field
+        { $set: input }, // Use $set to update only provided fields
+        { new: true, runValidators: true } // Return updated doc and validate
       ).lean();
     },
     deleteEmployee: async (_, { id }, { user }) => {
       if (!user || user.role !== 'admin')
         throw new AuthenticationError('Admins only');
-      const result = await Employee.findOneAndDelete({ id });
+      const result = await Employee.findOneAndDelete({ id }); // Use findOneAndDelete with custom id
       return !!result;
     },
     login: async (_, { email, password }) => {
-      const employee = await Employee.findOne({ email });
-      if (!employee) {
-        throw new AuthenticationError('Invalid credentials');
-      }
-      const isValid = await employee.comparePassword(password);
-      if (!isValid) {
-        throw new AuthenticationError('Invalid credentials');
-      }
-      return jwt.sign(
-        { email: employee.email, role: employee.role },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
+      return await login(email, password);
     },
   },
 };
