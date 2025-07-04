@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const Employee = require('./models/Employee');
 
+// Middleware to verify JWT token
 const authMiddleware = (req) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
@@ -11,28 +11,18 @@ const authMiddleware = (req) => {
   }
 };
 
+// Mock login function for POC (replace with user model in production)
 const login = async (email, password) => {
-  // Check for hardcoded admin credentials
   if (email === 'admin@example.com' && password === 'admin123') {
     return jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
+  } else if (email === 'employee@example.com' && password === 'emp123') {
+    return jwt.sign({ email, role: 'employee' }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
   }
-
-  // Fallback to database authentication for other users
-  const employee = await Employee.findOne({ email });
-  if (!employee) {
-    throw new Error('Invalid credentials');
-  }
-  const isValid = await employee.comparePassword(password);
-  if (!isValid) {
-    throw new Error('Invalid credentials');
-  }
-  return jwt.sign(
-    { email: employee.email, role: employee.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+  throw new Error('Invalid credentials');
 };
 
 module.exports = { authMiddleware, login };

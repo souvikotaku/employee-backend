@@ -10,7 +10,6 @@ const typeDefs = gql`
     attendance: String!
     email: String!
     phone: String!
-    password: String!
     role: String!
   }
 
@@ -27,7 +26,6 @@ const typeDefs = gql`
     attendance: String
     email: String
     phone: String
-    password: String
     role: String
   }
 

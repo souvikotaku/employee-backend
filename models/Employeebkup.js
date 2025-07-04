@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
 
 const employeeSchema = new mongoose.Schema(
   {
@@ -12,26 +11,12 @@ const employeeSchema = new mongoose.Schema(
     class: { type: String, required: true },
     subjects: [{ type: String }],
     attendance: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true },
     phone: { type: String, required: true },
-    password: { type: String, required: true }, // Added password field
     role: { type: String, enum: ['admin', 'employee'], default: 'employee' },
   },
   { collection: 'employee_db' } // Explicitly set collection name
 );
-
-// Hash password before saving
-employeeSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
-});
-
-// Method to compare passwords
-employeeSchema.methods.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
 
 // Add index for faster filtering
 employeeSchema.index({ 'name.first': 1 });

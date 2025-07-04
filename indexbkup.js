@@ -1,4 +1,4 @@
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, cors } = require('apollo-server');
 const mongoose = require('mongoose');
 const typeDefs = require('./schema');
 const resolvers = require('./resolvers');
@@ -19,9 +19,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: ({ req }) => ({ user: authMiddleware(req) }),
-  cors: true,
+  cors: true, // Enable CORS
 });
 
-server.listen({ port: process.env.PORT || 5000 }).then(({ url }) => {
+server.listen({ port: process.env.PORT || 4000 }).then(({ url }) => {
   console.log(`Server running at ${url}`);
 });
