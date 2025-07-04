@@ -14,18 +14,6 @@ const typeDefs = gql`
     role: String!
   }
 
-  type EmployeeUpdate {
-    id: ID!
-    name: Name!
-    age: Int!
-    class: String!
-    subjects: [String!]!
-    attendance: String!
-    email: String!
-    phone: String!
-    role: String!
-  }
-
   type Name {
     first: String!
     last: String!
@@ -40,17 +28,6 @@ const typeDefs = gql`
     email: String
     phone: String
     password: String
-    role: String
-  }
-
-  input EmployeeInputupdate {
-    name: NameInput!
-    age: Int!
-    class: String
-    subjects: [String!]
-    attendance: String
-    email: String
-    phone: String
     role: String
   }
 
@@ -73,7 +50,7 @@ const typeDefs = gql`
 
   type Mutation {
     addEmployee(input: EmployeeInput!): Employee!
-    updateEmployee(id: ID!, input: EmployeeInput!): EmployeeUpdate!
+    updateEmployee(id: ID!, input: EmployeeInput!): Employee!
     deleteEmployee(id: ID!): Boolean!
     login(email: String!, password: String!): String!
   }
