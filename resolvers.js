@@ -38,11 +38,14 @@ const resolvers = {
       //   throw new AuthenticationError('Admins only');
       // Only hash password if provided in input
       if (input.password) {
-        input.password = await bcrypt.hash(input.password, 10);
+        updateData.password = await bcrypt.hash(input.password, 10);
+      } else {
+        // Remove password from updateData if not provided to avoid validation
+        delete updateData.password;
       }
       return await Employee.findOneAndUpdate(
         { id },
-        { $set: input },
+        { $set: updateData },
         { new: true, runValidators: true }
       ).lean();
     },
