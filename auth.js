@@ -1,43 +1,28 @@
 const jwt = require('jsonwebtoken');
-const { AuthenticationError } = require('apollo-server');
-const Employee = require('./models/Employee');
-const bcrypt = require('bcrypt');
 
-const secret = process.env.JWT_SECRET || 'your-secret-key';
-
-const authMiddleware = async (req) => {
-  const token = req.headers.authorization?.split(' ')[1]; // Extract token from "Bearer <token>"
+// Middleware to verify JWT token
+const authMiddleware = (req) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return null;
-
   try {
-    const decoded = jwt.verify(token, secret);
-    const employee = await Employee.findOne({ id: decoded.id }).lean();
-    if (!employee) throw new AuthenticationError('Invalid token');
-
-    return { id: employee.id, role: employee.role };
-  } catch (error) {
-    throw new AuthenticationError('Invalid or expired token');
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch {
+    return null;
   }
 };
 
+// Mock login function for POC (replace with user model in production)
 const login = async (email, password) => {
-  // Hardcoded test credentials for admin
   if (email === 'admin@example.com' && password === 'admin123') {
-    const token = jwt.sign({ email, role: 'admin' }, secret, {
+    return jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, {
       expiresIn: '1h',
     });
-    return { token, role: 'admin' };
+  } else if (email === 'employee@example.com' && password === 'emp123') {
+    return jwt.sign({ email, role: 'employee' }, process.env.JWT_SECRET, {
+      expiresIn: '1h',
+    });
   }
-
-  // Normal login flow
-  const employee = await Employee.findOne({ email }).lean();
-  if (!employee || !(await bcrypt.compare(password, employee.password))) {
-    return { token: null, role: null };
-  }
-  const token = jwt.sign({ id: employee.id, role: employee.role }, secret, {
-    expiresIn: '1h',
-  });
-  return { token, role: employee.role };
+  throw new Error('Invalid credentials');
 };
 
 module.exports = { authMiddleware, login };
