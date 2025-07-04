@@ -37,6 +37,9 @@ const resolvers = {
       // if (!user || user.role !== 'admin')
       //   throw new AuthenticationError('Admins only');
       // Only hash password if provided in input
+
+      const updateData = { ...input };
+
       if (input.password) {
         updateData.password = await bcrypt.hash(input.password, 10);
       } else {
