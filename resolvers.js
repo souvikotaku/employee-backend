@@ -1,6 +1,7 @@
 const Employee = require('./models/Employee');
 const { AuthenticationError } = require('apollo-server');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt'); // Add this line
 
 const resolvers = {
   Query: {
