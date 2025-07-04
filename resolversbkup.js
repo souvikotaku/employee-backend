@@ -1,6 +1,6 @@
 const Employee = require('./models/Employee');
 const { AuthenticationError } = require('apollo-server');
-const bcrypt = require('bcrypt');
+const { login } = require('./auth');
 
 const resolvers = {
   Query: {
@@ -11,53 +11,40 @@ const resolvers = {
       const query = filter ? { 'name.first': new RegExp(filter, 'i') } : {};
       const sort = sortBy ? { [sortBy]: sortOrder === 'desc' ? -1 : 1 } : {};
       return await Employee.find(query)
-        .lean()
+        .lean() // Optimize by converting to plain JS objects
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit);
     },
     employee: async (_, { id }, { user }) => {
       if (!user) throw new AuthenticationError('You must be logged in');
-      return await Employee.findOne({ id }).lean();
+      return await Employee.findOne({ id }).lean(); // Correctly uses custom id field
     },
   },
   Mutation: {
     addEmployee: async (_, { input }, { user }) => {
       if (!user || user.role !== 'admin')
-        throw new AuthenticationError('Only admins can add employees');
-      const { password, ...employeeData } = input;
-      if (!password) throw new AuthenticationError('Password is required');
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const employee = new Employee({
-        ...employeeData,
-        id: Date.now().toString(),
-        password: hashedPassword,
-      });
+        throw new AuthenticationError('Admins only');
+      const employee = new Employee({ ...input, id: Date.now().toString() });
       return await employee.save();
     },
     updateEmployee: async (_, { id, input }, { user }) => {
       if (!user || user.role !== 'admin')
-        throw new AuthenticationError('Only admins can update employees');
-      const { password, ...updateData } = input;
-      if (password)
-        throw new AuthenticationError('Password cannot be updated here');
+        throw new AuthenticationError('Admins only');
       return await Employee.findOneAndUpdate(
-        { id },
-        { $set: updateData },
-        { new: true, runValidators: true }
+        { id }, // Query by custom id field
+        { $set: input }, // Use $set to update only provided fields
+        { new: true, runValidators: true } // Return updated doc and validate
       ).lean();
     },
     deleteEmployee: async (_, { id }, { user }) => {
       if (!user || user.role !== 'admin')
-        throw new AuthenticationError('Only admins can delete employees');
-      const result = await Employee.findOneAndDelete({ id });
+        throw new AuthenticationError('Admins only');
+      const result = await Employee.findOneAndDelete({ id }); // Use findOneAndDelete with custom id
       return !!result;
     },
     login: async (_, { email, password }) => {
-      const { token, role } = require('./auth').login(email, password);
-      if (!token) throw new AuthenticationError('Invalid credentials');
-      return { token, role };
+      return await login(email, password);
     },
   },
 };

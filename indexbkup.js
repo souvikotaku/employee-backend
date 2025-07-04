@@ -1,4 +1,4 @@
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer, cors } = require('apollo-server');
 const mongoose = require('mongoose');
 const typeDefs = require('./schema');
 const resolvers = require('./resolvers');
@@ -15,16 +15,10 @@ mongoose
   )
   .catch((err) => console.error('MongoDB connection error:', err));
 
-// Context function to handle authentication
-const context = async ({ req }) => {
-  const user = await authMiddleware(req);
-  return { user }; // Pass the user object to resolvers
-};
-
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context, // Use the custom context function
+  context: ({ req }) => ({ user: authMiddleware(req) }),
   cors: true, // Enable CORS
 });
 

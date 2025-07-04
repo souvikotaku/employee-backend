@@ -1,24 +1,21 @@
 const mongoose = require('mongoose');
 
-const employeeSchema = new mongoose.Schema(
-  {
-    id: { type: String, required: true, unique: true },
-    name: {
-      first: { type: String, required: true },
-      last: { type: String, required: true },
-    },
-    age: { type: Number, required: true },
-    class: { type: String, required: true },
-    subjects: [{ type: String }],
-    attendance: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
-    role: { type: String, enum: ['admin', 'employee'], default: 'employee' },
-  },
-  { collection: 'employee_db' } // Explicitly set collection name
-);
+const nameSchema = new mongoose.Schema({
+  first: { type: String, required: true },
+  last: { type: String, required: true },
+});
 
-// Add index for faster filtering
-employeeSchema.index({ 'name.first': 1 });
+const employeeSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: { type: nameSchema, required: true },
+  age: { type: Number, required: true },
+  class: { type: String, required: true },
+  subjects: [{ type: String, required: true }],
+  attendance: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  phone: { type: String, required: true },
+  role: { type: String, required: true, enum: ['admin', 'employee'] },
+  password: { type: String, required: true },
+});
 
 module.exports = mongoose.model('Employee', employeeSchema);

@@ -27,17 +27,11 @@ const typeDefs = gql`
     email: String
     phone: String
     role: String
-    password: String # Optional for updates, required for new employees
   }
 
   input NameInput {
     first: String!
     last: String!
-  }
-
-  type AuthPayload {
-    token: String!
-    role: String!
   }
 
   type Query {
@@ -55,7 +49,7 @@ const typeDefs = gql`
     addEmployee(input: EmployeeInput!): Employee!
     updateEmployee(id: ID!, input: EmployeeInput!): Employee!
     deleteEmployee(id: ID!): Boolean!
-    login(email: String!, password: String!): AuthPayload!
+    login(email: String!, password: String!): String!
   }
 `;
 
