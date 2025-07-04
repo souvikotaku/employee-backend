@@ -21,6 +21,10 @@ const resolvers = {
       if (!user) throw new AuthenticationError('You must be logged in');
       return await Employee.findOne({ id }).lean();
     },
+    employeeByEmail: async (_, { email }, { user }) => {
+      if (!user) throw new AuthenticationError('You must be logged in');
+      return await Employee.findOne({ email }).lean();
+    },
   },
   Mutation: {
     addEmployee: async (_, { input }, { user }) => {

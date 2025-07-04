@@ -45,6 +45,7 @@ const typeDefs = gql`
       sortOrder: String
     ): [Employee!]!
     employee(id: ID!): Employee
+    employeeByEmail(email: String!): Employee
   }
 
   type Mutation {
