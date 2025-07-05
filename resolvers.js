@@ -28,8 +28,8 @@ const resolvers = {
   },
   Mutation: {
     addEmployee: async (_, { input }, { user }) => {
-      if (!user || user.role !== 'admin')
-        throw new AuthenticationError('Admins only');
+      // if (!user || user.role !== 'admin')
+      //   throw new AuthenticationError('Admins only');
       const employee = new Employee({ ...input, id: Date.now().toString() });
       return await employee.save();
     },
